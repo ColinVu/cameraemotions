@@ -28,9 +28,6 @@ class DebugEmotionDetector:
         # Emotion tracking with sliding window
         self.emotion_window = deque(maxlen=30)  # 3 seconds * 10 FPS = 30 frames
         self.window_duration = 3.0  # 3 seconds
-        self.min_presence = 2.0  # Must be present for at least 2 seconds
-        self.last_logged_emotion = None
-        self.last_logged_time = None
         
         # New emotion recording system
         self.counter = 0  # Counter that starts at 0
@@ -164,16 +161,6 @@ class DebugEmotionDetector:
         # Clear video display
         self.video_label.config(image='')
         
-    def log_emotion_presence(self, emotion, presence_time, total_time):
-        """Log emotion that was present for sufficient time in the window"""
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print(f"\n{'='*60}")
-        print(f"EMOTION DETECTED: {emotion.upper()}")
-        print(f"Present for: {presence_time:.1f} out of {total_time:.1f} seconds")
-        print(f"Percentage: {(presence_time/total_time)*100:.1f}%")
-        print(f"Logged at: {timestamp}")
-        print(f"{'='*60}\n")
-        
     def calculate_emotion_score(self):
         """Calculate emotionScore based on weighted history"""
         # Set all values in emotionScore to 0
@@ -241,44 +228,11 @@ class DebugEmotionDetector:
                 
                 # Update last record time
                 self.last_record_time = current_time
-                
-    def analyze_emotion_window(self):
-        """Analyze the emotion window and log if any emotion meets criteria"""
-        if len(self.emotion_window) < 15:  # Need at least 1.5 seconds of data
-            return
-            
-        # Count emotions in the window
-        emotion_counts = defaultdict(int)
-        total_frames = len(self.emotion_window)
-        
-        for emotion, timestamp in self.emotion_window:
-            emotion_counts[emotion] += 1
-            
-        # Calculate presence time for each emotion
-        current_time = time.time()
-        window_start_time = current_time - self.window_duration
-        
-        for emotion, count in emotion_counts.items():
-            presence_time = (count / total_frames) * self.window_duration
-            
-            # Check if emotion meets criteria (present for at least 2 of 3 seconds)
-            if presence_time >= self.min_presence:
-                # Avoid logging the same emotion repeatedly
-                if (emotion != self.last_logged_emotion or 
-                    current_time - self.last_logged_time > 5.0):  # 5 second cooldown
-                    
-                    self.log_emotion_presence(emotion, presence_time, self.window_duration)
-                    self.last_logged_emotion = emotion
-                    self.last_logged_time = current_time
                     
     def update_emotion_window(self, emotion):
         """Add current emotion to the sliding window"""
         current_time = time.time()
         self.emotion_window.append((emotion, current_time))
-        
-        # Analyze window every 0.5 seconds
-        if len(self.emotion_window) % 5 == 0:  # 5 frames = 0.5 seconds at 10 FPS
-            self.analyze_emotion_window()
         
     def get_window_stats(self):
         """Get current window statistics for display"""
@@ -447,7 +401,6 @@ def main():
     """Main function to run the debug emotion detector"""
     print("Starting Enhanced Emotion Detection System...")
     print("This version uses a 3-second sliding window approach.")
-    print("Emotions present for at least 2 of the previous 3 seconds will be logged.")
     print("Emotion data is recorded every 3 seconds in emotionCache.")
     print("EmotionScore is calculated with weighted history.")
     print()
