@@ -206,6 +206,9 @@ class DebugEmotionDetector:
                 # Calculate emotionScore
                 self.calculate_emotion_score()
                 
+                # Log to emotionLog.txt
+                self.log_emotion_scores()
+                
                 # Log the recording
                 timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 print(f"\n{'='*60}")
@@ -228,7 +231,25 @@ class DebugEmotionDetector:
                 
                 # Update last record time
                 self.last_record_time = current_time
-                    
+                
+    def log_emotion_scores(self):
+        """Log emotion scores to emotionLog.txt"""
+        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        
+        # Create compact log entry
+        log_entry = f"{timestamp}"
+        for i, emotion in enumerate(self.emotions):
+            score = self.emotionScore[i]
+            log_entry += f" {emotion}:{score:.1f}"
+        log_entry += "\n"
+        
+        # Write to file
+        try:
+            with open("emotionLog.txt", "a") as f:
+                f.write(log_entry)
+        except Exception as e:
+            print(f"Error writing to emotionLog.txt: {e}")
+        
     def update_emotion_window(self, emotion):
         """Add current emotion to the sliding window"""
         current_time = time.time()
